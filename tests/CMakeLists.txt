@@ -4,6 +4,7 @@ project(tests)
 
 enable_testing()
 
+#####################################################################################################
 # Download and unpack googletest at configure time
 file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/googletest-download)
 configure_file(CMakeLists.txt.in ${CMAKE_BINARY_DIR}/googletest-download/CMakeLists.txt)
@@ -36,11 +37,40 @@ if (CMAKE_VERSION VERSION_LESS 2.8.11)
   include_directories("${gtest_SOURCE_DIR}/include")
 endif()
 
+#####################################################################################################
+
 include_directories(${CMAKE_SOURCE_DIR})
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -Wall -Wextra -fsanitize=address")
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Wextra -pedantic ${COVERAGE_FLAGS}")
+    # todo: use sanitizers when they are available
+    # set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=address")
+elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+# todo: use sanitizers when they are available
+#    if (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 4.8)
+#        set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=address")
+#    endif()
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x -Wall -Wextra -pedantic ${COVERAGE_FLAGS}")
+elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel")
+    #todo
+elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
+    #todo
+endif()
 
-add_executable(${PROJECT_NAME} main.cpp custom_regex.cpp custom_hash.cpp constexpr.cpp)
+
+add_executable(${PROJECT_NAME} main.cpp custom_regex.cpp custom_hash.cpp thousand_cases.cpp)
 target_link_libraries(${PROJECT_NAME} gtest_main)
 add_test(${PROJECT_NAME} ${PROJECT_NAME})
+
+#TODO: run constexpr tests when relaxed constexpr is available
+
+#try_compile(COMPILE_SUCCEEDED ${CMAKE_BINARY_DIR}/compile_tests ${CMAKE_CURRENT_SOURCE_DIR} constexpr.cpp)
+
+#if (COMPILE_SUCCEEDED)
+#  add_executable(${PROJECT_NAME}-constexpr main.cpp custom_regex.cpp custom_hash.cpp)
+#  target_link_libraries(${PROJECT_NAME}-constexpr gtest_main)
+#  add_test(${PROJECT_NAME}-constexpr ${PROJECT_NAME}-constexpr)
+#endif()
+
+
 

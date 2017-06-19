@@ -1,4 +1,4 @@
-#include "strswitch.hpp"
+﻿#include "strswitch.hpp"
 #include "gtest/gtest.h"
 
 #include <string>

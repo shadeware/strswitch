@@ -43,3 +43,8 @@ TEST(strswitch, constexpr_tutorial)
     EXPECT_EQ(force_compile_value<constexpr_tutorial("06")>, 6);
 }
 
+int main(int argc, char** argv)
+{
+    testing::InitGoogleTest(&argc, argv);
+    return RUN_ALL_TESTS();
+}
