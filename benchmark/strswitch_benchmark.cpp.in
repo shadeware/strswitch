@@ -1,0 +1,38 @@
+#include <hayai.hpp>
+#include <strswitch.hpp>
+
+static int thousand_cases(const std::string& str)
+{
+  // clang-format off
+  STRSWITCH(str.data(), str.length(), STRSWITCH_DEFAULT_SEED,
+            (CASES,
+             @strswitch_map@)
+            (DEFAULT, return -1)
+            )
+  // clang-format on
+}
+
+
+BENCHMARK(benchmark, strswitch, 10, 1000)
+{
+  const char* benchmark_strings[] = {@benchmark_strings@ ""};
+  for (unsigned int i = 0; i <= @BENCHMARK_N@; ++i)
+    if (thousand_cases(benchmark_strings[i]) != i)
+      throw std::logic_error(std::to_string(i) + " was expected; got " + std::to_string(thousand_cases(std::to_string(i))));
+}
+
+int main()
+{
+  // check correctness
+  if (thousand_cases("-1") != -1)
+    throw std::logic_error("-1 was expected; got " + std::to_string(thousand_cases("-1")));
+  if (thousand_cases("-2") != -1)
+    throw std::logic_error("-1 was expected; got " + std::to_string(thousand_cases("-2")));
+  if (thousand_cases(std::to_string(@BENCHMARK_N@ + 1)) != -1)
+    throw std::logic_error("-1 was expected; got " + std::to_string(thousand_cases(std::to_string(@BENCHMARK_N@ + 1))));
+
+  hayai::ConsoleOutputter consoleOutputter;
+
+  hayai::Benchmarker::AddOutputter(consoleOutputter);
+  hayai::Benchmarker::RunAllTests();
+}
