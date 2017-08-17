@@ -9,8 +9,12 @@
 #define STRSWITCH_DEFAULT_SEED 14695981039346656037ULL
 #endif
 
-#ifndef STRSWITCH_CPP14_CONSTEXPR
-#define STRSWITCH_CPP14_CONSTEXPR // disabled by default
+#ifndef STRSWITCH_RELAXED_CONSTEXPR // overridable
+#  if !defined(__cpp_constexpr) || (__cpp_constexpr < 201304)
+#    define STRSWITCH_RELAXED_CONSTEXPR // not present
+#  else
+#    define STRSWITCH_RELAXED_CONSTEXPR constexpr
+#  endif
 #endif
 
 namespace strswitch
@@ -22,7 +26,7 @@ using sizet = decltype(sizeof(0));
 // ----------------------------------------------------------------------------------------------
 
 template <class Char>
-STRSWITCH_CPP14_CONSTEXPR inline bool strings_equal(const Char* str1, const Char* str2, sizet length) noexcept
+STRSWITCH_RELAXED_CONSTEXPR inline bool strings_equal(const Char* str1, const Char* str2, sizet length) noexcept
 {
     for (sizet i = 0; i < length; ++i)
         if (str1[i] != str2[i])
@@ -36,18 +40,32 @@ STRSWITCH_CPP14_CONSTEXPR inline bool strings_equal(const Char* str1, const Char
 using hash_type = unsigned long long;
 namespace detail
 {
+#ifdef STRSWITCH_RELAXED_CONSTEXPR
+// for loop should be faster to compile than recursion
+template <class Char>
+static inline constexpr hash_type hash(const Char* str, sizet length, hash_type seed) noexcept
+{
+    hash_type res = seed;
+    for (sizet i = length; i != 0; --i)
+      {
+        res ^= static_cast<hash_type>(str[i - 1])) * 1099511628211ULL;
+      }
+}
+#else // STRSWITCH_RELAXED_CONSTEXPR
 template <class Char>
 static inline constexpr hash_type hash_impl(hash_type seed, const Char* str, sizet len, sizet i) noexcept
 {
     return i == 0 ? seed : (hash_impl(seed, str, len, i - 1) ^ static_cast<hash_type>(str[i - 1])) * 1099511628211ULL;
 }
-} // namespace detail
 
 template <class Char>
 static inline constexpr hash_type hash(const Char* str, sizet length, hash_type seed) noexcept
 {
     return detail::hash_impl(seed, str, length, length);
 }
+#endif
+
+} // namespace detail
 
 template <class Char, sizet N>
 static inline constexpr hash_type hash(const Char (&str)[N], hash_type seed) noexcept
@@ -59,7 +77,7 @@ static inline constexpr hash_type hash(const Char (&str)[N], hash_type seed) noe
 // ----------------------------------------------------------------------------------------------
 
 template <class Char, sizet N>
-STRSWITCH_CPP14_CONSTEXPR inline bool starts_with(const Char (&prefix_str)[N], const Char* str, sizet length) noexcept
+STRSWITCH_RELAXED_CONSTEXPR inline bool starts_with(const Char (&prefix_str)[N], const Char* str, sizet length) noexcept
 {
     const auto prefix_length = N - 1;
 
@@ -70,7 +88,7 @@ STRSWITCH_CPP14_CONSTEXPR inline bool starts_with(const Char (&prefix_str)[N], c
 }
 
 template <class Char, sizet N>
-STRSWITCH_CPP14_CONSTEXPR inline bool ends_with(const Char (&suffix_str)[N], const Char* str, sizet length) noexcept
+STRSWITCH_RELAXED_CONSTEXPR inline bool ends_with(const Char (&suffix_str)[N], const Char* str, sizet length) noexcept
 {
     const auto suffix_length = N - 1;
 
