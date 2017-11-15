@@ -9,13 +9,20 @@
 #define STRSWITCH_DEFAULT_SEED 14695981039346656037ULL
 #endif
 
-#ifndef STRSWITCH_RELAXED_CONSTEXPR // overridable
-#  if !defined(__cpp_constexpr) || (__cpp_constexpr < 201304)
-#    define STRSWITCH_RELAXED_CONSTEXPR // not present
-#  else
-#    define STRSWITCH_RELAXED_CONSTEXPR constexpr
+
+#if 0 // fixme: detection
+#ifndef STRSWITCH_RELAXED_CONSTEXPR_DETECTED // overridable
+#  if !defined(__cpp_constexpr) || (__cpp_constexpr < 201304) // todo: not sufficient
+#    define STRSWITCH_RELAXED_CONSTEXPR_DETECTED // not present
 #  endif
-#endif
+#endif // STRSWITCH_RELAXED_CONSTEXPR_DETECTED
+#endif // 0
+
+#ifdef STRSWITCH_RELAXED_CONSTEXPR_DETECTED
+#  define STRSWITCH_RELAXED_CONSTEXPR constexpr
+#else 
+#  define STRSWITCH_RELAXED_CONSTEXPR // not present
+#endif // STRSWITCH_RELAXED_CONSTEXPR_DETECTED
 
 namespace strswitch
 {
@@ -40,7 +47,7 @@ STRSWITCH_RELAXED_CONSTEXPR inline bool strings_equal(const Char* str1, const Ch
 using hash_type = unsigned long long;
 namespace detail
 {
-#ifdef STRSWITCH_RELAXED_CONSTEXPR
+#ifdef STRSWITCH_RELAXED_CONSTEXPR_DETECTED
 // for loop should be faster to compile than recursion
 template <class Char>
 static inline constexpr hash_type hash(const Char* str, sizet length, hash_type seed) noexcept
@@ -48,10 +55,11 @@ static inline constexpr hash_type hash(const Char* str, sizet length, hash_type 
     hash_type res = seed;
     for (sizet i = length; i != 0; --i)
       {
-        res ^= static_cast<hash_type>(str[i - 1])) * 1099511628211ULL;
+        res ^= static_cast<hash_type>(str[i - 1]) * 1099511628211ULL;
       }
+    return res;
 }
-#else // STRSWITCH_RELAXED_CONSTEXPR
+#else // STRSWITCH_RELAXED_CONSTEXPR_DETECTED
 template <class Char>
 static inline constexpr hash_type hash_impl(hash_type seed, const Char* str, sizet len, sizet i) noexcept
 {
@@ -61,18 +69,24 @@ static inline constexpr hash_type hash_impl(hash_type seed, const Char* str, siz
 template <class Char>
 static inline constexpr hash_type hash(const Char* str, sizet length, hash_type seed) noexcept
 {
-    return detail::hash_impl(seed, str, length, length);
+    return hash_impl(seed, str, length, length);
 }
-#endif
+#endif // STRSWITCH_RELAXED_CONSTEXPR_DETECTED
 
 } // namespace detail
 
+template <class Char>
+static inline constexpr hash_type hash(const Char* str, sizet length, hash_type seed) noexcept
+{
+    return detail::hash(str, length, seed);
+}
+    
 template <class Char, sizet N>
 static inline constexpr hash_type hash(const Char (&str)[N], hash_type seed) noexcept
 {
     return hash(str, N - 1, seed);
 }
-#endif
+#endif // STRSWITCH_CUSTOM_HASH
 
 // ----------------------------------------------------------------------------------------------
 
