@@ -5,4 +5,4 @@ project(strswitch)
 enable_testing()
 
 add_subdirectory(tests)
-add_subdirectory(benchmark)
+# add_subdirectory(benchmark)
