@@ -230,7 +230,7 @@ matrix:
 
 before_install:
     - eval "${MATRIX_EVAL}"
-    - echo -n | openssl s_client -connect scan.coverity.com:443 | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | sudo tee -a /etc/ssl/certs/ca-
+    # - echo -n | openssl s_client -connect scan.coverity.com:443 | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | sudo tee -a /etc/ssl/certs/ca-
     - |-
       if [ -n "${COVERAGE}" ]; then
           export CMAKE_EXTRA_ARGS="${CMAKE_EXTRA_ARGS} --coverage"
@@ -244,15 +244,15 @@ install:
   - make -C lcov-1.13/
   - export PATH="${PATH}:$(readlink -f lcov-1.13/bin)"
 
-addons:
-  coverity_scan:
-    project:
-      name: "shadeware/strswitch"
-      description: "Build submitted via Travis CI"
-    notification_email: xdiagonx@gmail.com
-    build_command_prepend: "cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS='-DNDEBUG=1' ."
-    build_command:   "cmake --build ."
-    branch_pattern: (master|coverity_scan)
+#addons:
+#  coverity_scan:
+#    project:
+#      name: "shadeware/strswitch"
+#      description: "Build submitted via Travis CI"
+#    notification_email: xdiagonx@gmail.com
+#    build_command_prepend: "cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS='-DNDEBUG=1' ."
+#    build_command:   "cmake --build ."
+#    branch_pattern: (master|coverity_scan)
 
 script:
   - cd ${TRAVIS_BUILD_DIR}/.. && mkdir build && cd build
